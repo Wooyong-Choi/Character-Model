@@ -1,6 +1,7 @@
 """Define RNN-based encoders."""
 from __future__ import division
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -67,10 +68,34 @@ class RNNEncoder(EncoderBase):
 
         if lengths is not None and not self.no_pack_padded_seq:
             memory_bank = unpack(memory_bank)[0]
+            
+        # Wychoi
+        memory_bank = self._getMaxedContext(memory_bank, layout)
 
         if self.use_bridge:
             encoder_final = self._bridge(encoder_final)
         return encoder_final, memory_bank
+    
+    def _getMaxedContext(self, context, layout):
+        hidden_size = context.size()[2]
+        max_word_lens = layout.shape[0]-1
+        layout = layout.transpose()
+        
+        maxed_contexts = []
+        for i, l in enumerate(layout):
+            layout_len = l.argmin()
+            layout_len = layout_len if layout_len != 0 else len(l)
+            # l[j] = prev, l[j+1] = next
+            maxed_context = torch.cat([context[l[j]:l[j+1], i].max(dim=0, keepdim=True)[0] for j in range(layout_len-1)], dim=0)
+            
+            padding_size = max_word_lens - layout_len + 1
+            if padding_size != 0:
+                padding_vec = torch.zeros((padding_size, hidden_size), device=context.device)
+                maxed_context = torch.cat((maxed_context, padding_vec), dim=0)
+            maxed_contexts.append(maxed_context)
+    
+        maxed_contexts = torch.stack(maxed_contexts, dim=1)
+        return maxed_contexts
 
     def _initialize_bridge(self, rnn_type,
                            hidden_size,

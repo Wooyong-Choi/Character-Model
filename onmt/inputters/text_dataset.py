@@ -217,7 +217,7 @@ class TextDataset(DatasetBase):
             include_lengths=True)
 
         fields["src_layout"] = \
-            torchtext.data.Field(use_vocab=False, pad_token=0)
+            torchtext.data.Field(use_vocab=False, pad_token=-1)
             
         for j in range(n_src_features):
             fields["src_feat_" + str(j)] = \

@@ -16,9 +16,6 @@ import onmt.utils
 
 from onmt.utils.logging import logger
 
-# For test
-import time
-
 
 def build_trainer(opt, model, fields, optim, data_type, model_saver=None):
     """
@@ -274,9 +271,6 @@ class Trainer(object):
             else:
                 src_lengths = None
    
-            print(src.size())
-            print(src_layout.shape)
-            time.sleep(10)
             tgt_outer = inputters.make_features(batch, 'tgt')
 
             for j in range(0, target_size-1, trunc_size):

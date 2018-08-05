@@ -189,7 +189,6 @@ class TextDataset(DatasetBase):
                 prefix = side + "_feat_"
                 example_dict.update((prefix + str(j), f)
                                     for j, f in enumerate(feats))
-            print(example_dict, n_feats)
             yield example_dict, n_feats
 
     @staticmethod
@@ -217,9 +216,12 @@ class TextDataset(DatasetBase):
             pad_token=PAD_WORD,
             include_lengths=True)
 
+        fields["src_layout"] = \
+            torchtext.data.Field(use_vocab=False, pad_token=0)
+            
         for j in range(n_src_features):
             fields["src_feat_" + str(j)] = \
-                torchtext.data.Field(use_vocab=False, dtype=torch.long)
+                torchtext.data.Field(use_vocab=False, sequential=True, dtype=torch.long)
 
         fields["tgt"] = torchtext.data.Field(
             init_token=BOS_WORD, eos_token=EOS_WORD,
@@ -227,8 +229,7 @@ class TextDataset(DatasetBase):
 
         for j in range(n_tgt_features):
             fields["tgt_feat_" + str(j)] = \
-                torchtext.data.Field(init_token=BOS_WORD, eos_token=EOS_WORD,
-                                     pad_token=PAD_WORD)
+                torchtext.data.Field(use_vocab=False, dtype=torch.long)
 
         def make_src(data, vocab):
             """ ? """
@@ -376,7 +377,7 @@ class ShardedTextCorpusIterator(object):
                     cur_pos = self.corpus.tell()
                     if cur_pos >= self.last_pos + self.shard_size:
                         self.last_pos = cur_pos
-                        raise StopIteration
+                        raise StopIteration3
 
                 line = self.corpus.readline()
                 if line == '':
@@ -416,10 +417,13 @@ class ShardedTextCorpusIterator(object):
         words, feats, n_feats = TextDataset.extract_text_features(line)
         
         example_dict = {self.side: words, "indices": index}
-        if self.side == "src":
+        
+        if feats and self.side == 'src':
             # All examples must have same number of features.
             aeq(self.n_feats, n_feats)
-
+            
+            #prefix = self.side + "_feat_"
+            #example_dict[prefix + str(0)]=  feats
             example_dict['src_layout'] = feats
 
         return example_dict

@@ -71,6 +71,8 @@ class DatasetBase(torchtext.data.Dataset):
             blank_idx.insert(0, 0)
             blank_idx.append(len(tokenList))
             
+            #blank_idx = [str(i) for i in blank_idx]
+            
             return blank_idx        
             
         features = getBlankIndices(tokens)

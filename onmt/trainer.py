@@ -16,6 +16,9 @@ import onmt.utils
 
 from onmt.utils.logging import logger
 
+# For test
+import time
+
 
 def build_trainer(opt, model, fields, optim, data_type, model_saver=None):
     """
@@ -141,6 +144,7 @@ class Trainer(object):
 
             reduce_counter = 0
             for i, batch in enumerate(train_iter):
+                #print(batch)
                 if self.n_gpu == 0 or (i % self.n_gpu == self.gpu_rank):
                     if self.gpu_verbose_level > 1:
                         logger.info("GpuRank %d: index: %d accum: %d"
@@ -260,15 +264,19 @@ class Trainer(object):
                 trunc_size = self.trunc_size
             else:
                 trunc_size = target_size
-
+            
             dec_state = None
             src = inputters.make_features(batch, 'src', self.data_type)
+            src_layout = inputters.make_features(batch, 'src_layout', self.data_type).squeeze(dim=2).cpu().numpy()
             if self.data_type == 'text':
                 _, src_lengths = batch.src
                 report_stats.n_src_words += src_lengths.sum().item()
             else:
                 src_lengths = None
-
+   
+            print(src.size())
+            print(src_layout.shape)
+            time.sleep(10)
             tgt_outer = inputters.make_features(batch, 'tgt')
 
             for j in range(0, target_size-1, trunc_size):
@@ -279,7 +287,7 @@ class Trainer(object):
                 if self.grad_accum_count == 1:
                     self.model.zero_grad()
                 outputs, attns, dec_state = \
-                    self.model(src, tgt, src_lengths, dec_state)
+                    self.model(src, tgt, src_lengths, src_layout, dec_state)
 
                 # 3. Compute loss in shards for memory efficiency.
                 batch_stats = self.train_loss.sharded_compute_loss(

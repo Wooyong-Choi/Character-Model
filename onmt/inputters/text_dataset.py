@@ -189,6 +189,7 @@ class TextDataset(DatasetBase):
                 prefix = side + "_feat_"
                 example_dict.update((prefix + str(j), f)
                                     for j, f in enumerate(feats))
+            print(example_dict, n_feats)
             yield example_dict, n_feats
 
     @staticmethod
@@ -218,7 +219,7 @@ class TextDataset(DatasetBase):
 
         for j in range(n_src_features):
             fields["src_feat_" + str(j)] = \
-                torchtext.data.Field(pad_token=PAD_WORD)
+                torchtext.data.Field(use_vocab=False, dtype=torch.long)
 
         fields["tgt"] = torchtext.data.Field(
             init_token=BOS_WORD, eos_token=EOS_WORD,
@@ -413,13 +414,12 @@ class ShardedTextCorpusIterator(object):
         if self.line_truncate:
             line = line[:self.line_truncate]
         words, feats, n_feats = TextDataset.extract_text_features(line)
+        
         example_dict = {self.side: words, "indices": index}
-        if feats:
+        if self.side == "src":
             # All examples must have same number of features.
             aeq(self.n_feats, n_feats)
 
-            prefix = self.side + "_feat_"
-            example_dict.update((prefix + str(j), f)
-                                for j, f in enumerate(feats))
+            example_dict['src_layout'] = feats
 
         return example_dict

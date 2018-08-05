@@ -61,17 +61,31 @@ class DatasetBase(torchtext.data.Dataset):
         if not tokens:
             return [], [], -1
 
+        def getBlankIndices(tokenList):
+            blank_idx = [i for i, x in enumerate(tokenList) if x == "^"]
+            
+            # Remove blank
+            for i in range(len(blank_idx)):
+                blank_idx[i] -= i
+                tokenList.pop(blank_idx[i])
+            blank_idx.insert(0, 0)
+            blank_idx.append(len(tokenList))
+            
+            return blank_idx        
+            
+        features = getBlankIndices(tokens)
+
         split_tokens = [token.split(u"￨") for token in tokens]
         split_tokens = [token for token in split_tokens if token[0]]
         token_size = len(split_tokens[0])
 
         assert all(len(token) == token_size for token in split_tokens), \
             "all words must have the same number of features"
+            
         words_and_features = list(zip(*split_tokens))
         words = words_and_features[0]
-        features = words_and_features[1:]
 
-        return words, features, token_size - 1
+        return words, features, token_size
 
     # Below are helper functions for intra-class use only.
 

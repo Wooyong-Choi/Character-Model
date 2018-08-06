@@ -227,6 +227,7 @@ class Trainer(object):
             self.valid_loss.cur_dataset = cur_dataset
 
             src = inputters.make_features(batch, 'src', self.data_type)
+            src_layout = inputters.make_features(batch, 'src_layout', self.data_type).squeeze(dim=2).cpu().numpy()
             if self.data_type == 'text':
                 _, src_lengths = batch.src
             else:
@@ -235,7 +236,7 @@ class Trainer(object):
             tgt = inputters.make_features(batch, 'tgt')
 
             # F-prop through the model.
-            outputs, attns, _ = self.model(src, tgt, src_lengths)
+            outputs, attns, _ = self.model(src, tgt, src_lengths, src_layout)
 
             # Compute loss.
             batch_stats = self.valid_loss.monolithic_compute_loss(

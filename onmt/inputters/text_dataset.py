@@ -68,6 +68,7 @@ class TextDataset(DatasetBase):
 
         out_fields = [(k, fields[k]) if k in fields else (k, None)
                       for k in keys]
+        
         example_values = ([ex[k] for k in keys] for ex in examples_iter)
 
         # If out_examples is a generator, we need to save the filter_pred
@@ -186,9 +187,8 @@ class TextDataset(DatasetBase):
 
             example_dict = {side: words, "indices": i}
             if feats:
-                prefix = side + "_feat_"
-                example_dict.update((prefix + str(j), f)
-                                    for j, f in enumerate(feats))
+                example_dict['src_layout'] = feats
+
             yield example_dict, n_feats
 
     @staticmethod

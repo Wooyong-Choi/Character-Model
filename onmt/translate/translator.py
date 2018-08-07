@@ -338,8 +338,9 @@ class Translator(object):
 
         # Encoder forward.
         src = inputters.make_features(batch, 'src', data.data_type)
+        src_layout = inputters.make_features(batch, 'src_layout', self.data_type).squeeze(dim=2).cpu().numpy()
         _, src_lengths = batch.src
-        enc_states, memory_bank = self.model.encoder(src, src_lengths)
+        enc_states, memory_bank = self.model.encoder(src, src_lengths, src_layout)
         dec_states = self.model.decoder.init_decoder_state(
             src, memory_bank, enc_states, with_cache=True)
 
@@ -513,11 +514,12 @@ class Translator(object):
 
         # (1) Run the encoder on the src.
         src = inputters.make_features(batch, 'src', data_type)
+        src_layout = inputters.make_features(batch, 'src_layout', self.data_type).squeeze(dim=2).cpu().numpy()
         src_lengths = None
         if data_type == 'text':
             _, src_lengths = batch.src
 
-        enc_states, memory_bank = self.model.encoder(src, src_lengths)
+        enc_states, memory_bank = self.model.encoder(src, src_lengths, src_layout)
         dec_states = self.model.decoder.init_decoder_state(
             src, memory_bank, enc_states)
 

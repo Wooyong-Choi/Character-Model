@@ -238,6 +238,7 @@ class Translator(object):
                 # Debug attention.
                 if attn_debug:
                     srcs = trans.src_raw
+                    print(type(trans))
                     preds = trans.pred_sents[0]
                     preds.append('</s>')
                     attns = trans.attns[0].tolist()
@@ -245,6 +246,7 @@ class Translator(object):
                     row_format = "{:>10.10} " + "{:>10.7f} " * len(srcs)
                     output = header_format.format("", *trans.src_raw) + '\n'
                     for word, row in zip(preds, attns):
+                        #print(word, row)
                         max_index = row.index(max(row))
                         row_format = row_format.replace(
                             "{:>10.7f} ", "{:*>10.7f} ", max_index + 1)
